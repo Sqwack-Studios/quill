@@ -7,6 +7,11 @@
 /out/build/Mingw64-Debug
 /out/build/x64-Debug-2
 
+CMakeCache.txt
+CMakeFiles/
+
+*.cmake
+*.pc
 
 bin/
 bin-int/
@@ -410,3 +415,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 *.vcxproj
+
