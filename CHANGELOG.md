@@ -1,3 +1,5 @@
+- TBD
+- [v10.0.1](#v1001)
 - [v10.0.0](#v1000)
 - [v9.0.3](#v903)
 - [v9.0.2](#v902)
@@ -89,6 +91,19 @@
 - [v1.1.0](#v110)
 - [v1.0.0](#v100)
 
+## TBD
+
+- Added unique prefixes to internal macro variables to prevent conflicts with user variable names in the same
+  scope. ([#799](https://github.com/odygrd/quill/issues/799)
+- Added overflow check when doubling resync interval in `RdtscClock::resync()` to prevent potential UBSan
+  warnings ([#809](https://github.com/odygrd/quill/issues/809)
+- Improved `Utility::to_hex` function
+
+## v10.0.1
+
+- Fixed PatternFormatter test to work with any repository name instead of hardcoded `quill` ([#795](https://github.com/odygrd/quill/issues/795))
+- Fixed Windows compiler warnings when clang-cl >= 19 is used
+
 ## v10.0.0
 
 ### New Features
@@ -113,6 +128,10 @@
   for details.
   For documentation, see [here](https://quillcpp.readthedocs.io/en/latest/binary_protocols.html).
 
+- The immediate flush feature has been enhanced to support interval-based flushing and moved to runtime. This feature
+  helps with debugging by ensuring log statements are flushed to the sink, blocking the caller
+  thread. ([#660](https://github.com/odygrd/quill/issues/660))
+  
 - Added `source_location_path_strip_prefix` option in `PatternFormatterOptions` to customize the display of the
   `%(source_location)` attribute of `PatternFormatter`. When set, any paths that contain this prefix will have
   the prefix and everything before it stripped from the displayed path. For example, with prefix "projects",
@@ -123,10 +142,6 @@
   components from the `%(source_location)` attribute of `PatternFormatter`. When enabled, relative path
   components like "../" are processed and removed, simplifying paths from `__FILE__` which might contain
   relative paths like "../../../test/main.cpp". ([#778](https://github.com/odygrd/quill/issues/778))
-
-- The immediate flush feature has been enhanced to support interval-based flushing and moved to runtime. This feature
-  helps with debugging by ensuring log statements are flushed to the sink, blocking the caller
-  thread. ([#660](https://github.com/odygrd/quill/issues/660))
 
 - Added the `QUILL_DISABLE_FILE_INFO` preprocessor flag and CMake option.  
   This disables `__FILE__` and `__LINE__` information in log statements at compile time when location-related patterns
@@ -178,6 +193,17 @@
     `function` as reference. This is used for the new macro-free mode.
   - `QUILL_LOG_RUNTIME_METADATA_SHALLOW` - Will take everything as reference. This is used when logging with
     compile-time metadata and using, for example, a dynamic log-level such as `LOG_DYNAMIC`.
+
+- When using a sink with overridden `PatternFormatterOptions`, the option `add_metadata_to_multi_line_logs` will now be
+  correctly applied at the Sink level. Previously, this option was only available and effective at the Logger level
+  `PatternFormatter`.
+
+- When a Sink with override `PatternFormatterOptions` is used and if no other sink exists using the `Logger`
+  `PatternFormatterOptions`, then the backend thread will no longer perform a redundant format log statement.
+
+- When using a sink with overridden `PatternFormatterOptions`, the `log_statement` that is passed to the
+  `Filter::filter()` will now be formatted based on the overridden options instead of using the `Logger`
+  `PatternFormatterOptions`.
 
 - Update bundled `libfmt` to `v11.2.0`
 
