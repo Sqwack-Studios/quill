@@ -2,8 +2,8 @@ function runQuillCmake()
 	
 	--Run the CMake command to generate quill solution files
 	
-	local quill_dir = "."
-	local build_dir = "."
+	local quill_dir = "vendor/quill"
+	local build_dir = "vendor/quill"
 	local ide = "Visual Studio 17 2022"
 
 --QUILL_NO_EXCEPTIONS "Enable this option to build without exception handling support."
