@@ -263,13 +263,14 @@ public:
   RotatingSink(fs::path const& filename, RotatingFileSinkConfig const& config,
                FileEventNotifier file_event_notifier = FileEventNotifier{},
                std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now())
-    : base_type(filename, static_cast<FileSinkConfig const&>(config), std::move(file_event_notifier), false),
+    : base_type(filename, static_cast<FileSinkConfig const&>(config),
+                std::move(file_event_notifier), false, start_time),
       _config(config)
   {
     uint64_t const today_timestamp_ns = static_cast<uint64_t>(
       std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count());
 
-    _clean_and_recover_files(filename, _config.open_mode(), today_timestamp_ns);
+    _clean_and_recover_files(this->_filename, _config.open_mode(), today_timestamp_ns);
 
     if (_config.rotation_frequency() != RotatingFileSinkConfig::RotationFrequency::Disabled)
     {
@@ -459,7 +460,7 @@ private:
     _created_files.emplace_front(this->_filename, 0, std::string{});
 
     // Open file for logging
-    this->open_file(this->_filename, "w");
+    this->open_file(this->_filename, _config.open_mode());
     _open_file_timestamp = record_timestamp_ns;
     this->_file_size = 0;
   }
@@ -476,7 +477,7 @@ private:
     }
 
     // if we are starting in "w" mode, then we also should clean all previous log files of the previous run
-    if (_config.remove_old_files() && (open_mode == "w"))
+    if (_config.remove_old_files() && (open_mode.find('w') != std::string::npos))
     {
       for (auto const& entry : fs::directory_iterator(fs::current_path() / filename.parent_path()))
       {
@@ -537,7 +538,7 @@ private:
         }
       }
     }
-    else if (open_mode == "a")
+    else if (open_mode.find('a') != std::string::npos)
     {
       // we need to recover the index from the existing files
       for (auto const& entry : fs::directory_iterator(fs::current_path() / filename.parent_path()))
@@ -694,7 +695,12 @@ private:
   /***/
   static uint64_t _calculate_initial_rotation_tp(uint64_t start_time_ns, RotatingFileSinkConfig const& config)
   {
+// time_t on i386 is 32 bits so casting out of range number results in zero
+#if (defined(__i386))
+    time_t const time_now = static_cast<time_t>(start_time_ns / 1000000000);
+#else
     time_t const time_now = static_cast<time_t>(start_time_ns) / 1000000000;
+#endif
     tm date;
 
     // here we do this because of `daily_rotation_time_str` that might have specified the time in UTC
